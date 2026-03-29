@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Paneli - OtoBorsası</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <nav class="bg-purple-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <span class="text-2xl font-bold">Yönetici Kontrol Paneli</span>
+            <a href="/" class="hover:text-gray-300 transition">Ana Sayfaya Dön</a>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-10">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Sistemdeki Tüm İlanlar</h2>
+        
+        <div class="bg-white shadow-md rounded my-6 overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Resim</th>
+                        <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Kategori</th>
+                        <th class="w-1/4 text-left py-3 px-4 uppercase font-semibold text-sm">Araç</th>
+                        <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">Fiyat</th>
+                        <th class="w-1/6 text-left py-3 px-4 uppercase font-semibold text-sm">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    <% listings.forEach(function(listing) { %>
+                    <tr>
+                        <td class="w-1/6 text-left py-3 px-4"><img src="<%= listing.images.split(',')[0] %>" class="w-16 h-12 object-cover rounded"></td>
+                        <td class="w-1/6 text-left py-3 px-4"><%= listing.category %></td>
+                        <td class="w-1/4 text-left py-3 px-4"><%= listing.brand %> <%= listing.model %> (<%= listing.year %>)</td>
+                        <td class="w-1/6 text-left py-3 px-4"><%= listing.price %> ₺</td>
+                        <td class="w-1/6 text-left py-3 px-4">
+                            <a href="/admin/delete/<%= listing.id %>" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm" onclick="return confirm('Bu ilanı silmek istediğinize emin misiniz?')">İlanı Sil</a>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

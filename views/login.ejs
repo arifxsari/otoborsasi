@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Giriş Yap - OtoBorsası</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Giriş Yap</h2>
+        <form action="/login" method="POST">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">E-posta Adresi</label>
+                <input type="email" name="email" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500">
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Şifre</label>
+                <input type="password" name="password" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500">
+            </div>
+            <button type="submit" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-400 transition">Giriş Yap</button>
+        </form>
+        <p class="mt-4 text-center text-sm">Hesabın yok mu? <a href="/register" class="text-blue-600 hover:underline">Kayıt Ol</a></p>
+        <p class="mt-2 text-center text-sm"><a href="/" class="text-gray-500 hover:underline">Ana Sayfaya Dön</a></p>
+    </div>
+</body>
+</html>

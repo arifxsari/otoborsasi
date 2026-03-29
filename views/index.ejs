@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <title>İkinci El Araç Platformu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #020617; } 
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; border: 2px solid #020617; } 
+        ::-webkit-scrollbar-thumb:hover { background: #b91c1c; } 
+
+        .ticker-wrap { width: 100%; overflow: hidden; background-color: #020617; border-bottom: 1px solid #1e293b; padding: 1.25rem 0; }
+        .ticker { display: inline-flex; white-space: nowrap; animation: ticker 35s linear infinite; }
+        .ticker:hover { animation-play-state: paused; } 
+        .ticker-item { margin: 0 3rem; font-size: 1.5rem; font-weight: 900; color: #334155; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.3s; cursor: pointer; }
+        .ticker-item:hover { color: #ef4444; transform: scale(1.05); }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
+
+        /* YENİ: SAYFA YÜKLENİRKEN AŞAĞIDAN YUKARI YUMUŞAK GELİŞ EFEKTİ */
+        .page-enter {
+            animation: fadeSlideUp 0.6s ease-out forwards;
+        }
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-200 flex flex-col min-h-screen">
+
+    <header class="sticky top-0 z-50 w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-800 shadow-xl transition-all duration-300">
+        <nav class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <a href="/" class="text-2xl font-bold tracking-wider text-red-500 drop-shadow-lg transition-link">OtoBorsası</a>
+            <div class="flex items-center">
+                <% if (user) { %>
+                    <span class="mr-4 text-gray-300 hidden md:inline font-medium">Hoş geldin, <b class="text-white"><%= user.name %></b></span>
+                    <% if (user.role === 'admin') { %> <a href="/admin" class="transition-link bg-purple-700/90 hover:bg-purple-600 text-white px-3 py-2 rounded-lg font-semibold text-sm mr-2 transition shadow">⚙️ Admin</a> <% } %>
+                    <a href="/favorites" class="transition-link bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-red-400 px-3 py-2 rounded-lg font-semibold text-sm mr-2 transition shadow backdrop-blur-sm">🤍 Favorilerim</a>
+                    <a href="/my-listings" class="transition-link bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-white px-3 py-2 rounded-lg font-semibold text-sm mr-2 transition shadow backdrop-blur-sm">📂 İlanlarım</a>
+                    <a href="/add-listing" class="transition-link bg-red-600/90 hover:bg-red-500 text-white px-3 py-2 rounded-lg font-semibold text-sm transition shadow-[0_0_10px_rgba(220,38,38,0.4)]">+ İlan Ver</a>
+                    <a href="/logout" class="ml-2 hover:text-red-400 text-gray-400 font-semibold text-sm transition">Çıkış</a>
+                <% } else { %>
+                    <a href="/login" class="transition-link hover:text-red-400 mr-4 font-semibold transition">Giriş Yap</a>
+                    <a href="/register" class="transition-link bg-red-600/90 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-500 transition shadow-[0_0_10px_rgba(220,38,38,0.4)]">Kayıt Ol</a>
+                <% } %>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 flex space-x-8 py-3 overflow-x-auto border-t border-slate-800/50">
+            <a href="/" class="transition-link font-bold whitespace-nowrap transition-colors <%= !filters.category ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'text-gray-400 hover:text-red-400' %>">Tüm Araçlar</a>
+            <a href="/?category=Otomobil" class="transition-link font-bold whitespace-nowrap transition-colors <%= filters.category === 'Otomobil' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'text-gray-400 hover:text-red-400' %>">Otomobil</a>
+            <a href="/?category=Arazi,+SUV+%26+Pick-up" class="transition-link font-bold whitespace-nowrap transition-colors <%= filters.category === 'Arazi, SUV & Pick-up' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'text-gray-400 hover:text-red-400' %>">Arazi, SUV & Pick-up</a>
+            <a href="/?category=Ticari+Araçlar" class="transition-link font-bold whitespace-nowrap transition-colors <%= filters.category === 'Ticari Araçlar' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'text-gray-400 hover:text-red-400' %>">Ticari Araçlar</a>
+            <a href="/?category=Motosiklet" class="transition-link font-bold whitespace-nowrap transition-colors <%= filters.category === 'Motosiklet' ? 'text-red-500 border-b-2 border-red-500 pb-1' : 'text-gray-400 hover:text-red-400' %>">Motosiklet</a>
+        </div>
+    </header>
+
+    <main id="main-content" class="flex-grow page-enter">
+        
+        <% 
+        let showHero = (!filters.q && !filters.city && !filters.minPrice && !filters.sort);
+        
+        let hBg = "https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=1920&auto=format&fit=crop";
+        let hBadge = "Türkiye'nin En Dinamik Pazarı";
+        let hTitle1 = "Hayalindeki Araca";
+        let hTitle2 = "Giden En Kısa Yol";
+        let hText = "Binlerce güncel ilan arasında gezin, hayallerini süsleyen o aracı saniyeler içinde bul. Güvenli ticaret OtoBorsası ile başlar.";
+
+        if (filters.category === 'Otomobil') {
+            hBg = "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1920&auto=format&fit=crop";
+            hBadge = "ŞEHRİN RİTMİNİ YAKALA";
+            hTitle1 = "Asfaltın Üzerindeki";
+            hTitle2 = "Yeni Yıldızını Bul";
+            hText = "Gündelik hayatın telaşında seni yarı yolda bırakmayacak, park etmesi kolay bir Punto ya da ailenle uzun yollara çıkabileceğin geniş bir sedan... Aradığın konfor burada.";
+        } else if (filters.category === 'Arazi, SUV & Pick-up') {
+            hBg = "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1920&auto=format&fit=crop";
+            hBadge = "MACERAYA HAZIR MISIN?";
+            hTitle1 = "Sınırları Zorla,";
+            hTitle2 = "Doğayı Keşfet";
+            hText = "Asfaltın bittiği yerde senin yolculuğun başlar. En zorlu arazi koşullarına meydan okuyan güçlü SUV ve Pick-up modelleriyle sınır tanıma.";
+        } else if (filters.category === 'Ticari Araçlar') {
+            hBg = "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=1920&auto=format&fit=crop";
+            hBadge = "İŞİNE GÜÇ KAT";
+            hTitle1 = "Ticaretin Yeni";
+            hTitle2 = "Liderleri Burada";
+            hText = "İşletmenizin yükünü hafifletecek, düşük yakıt tüketimi ve yüksek taşıma kapasitesiyle ticaretinize hız katacak profesyonel araçlar.";
+        } else if (filters.category === 'Motosiklet') {
+            hBg = "https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1920&auto=format&fit=crop";
+            hBadge = "SONSUZ ÖZGÜRLÜK";
+            hTitle1 = "Rüzgarı Hisset,";
+            hTitle2 = "İki Teker Üzerinde Yaşa";
+            hText = "Trafiğe takılmadan şehrin tadını çıkar veya uzun rotalarda rüzgarla bütünleş. Adrenalin tutkunları için en iyi motosiklet ilanları.";
+        }
+        %>
+
+        <% if (showHero) { %>
+        <div class="relative bg-slate-900 overflow-hidden border-b border-slate-800 transition-all duration-500">
+            <div class="absolute inset-0">
+                <img src="<%= hBg %>" class="w-full h-full object-cover opacity-20 transition-opacity duration-1000" alt="Arka Plan">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
+            </div>
+            
+            <div class="relative max-w-7xl mx-auto px-4 py-24 sm:py-32 flex flex-col items-center text-center z-10">
+                <span class="text-red-500 font-bold tracking-widest uppercase text-sm mb-4 border border-red-500/30 bg-red-500/10 px-4 py-1 rounded-full backdrop-blur-sm"><%= hBadge %></span>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 drop-shadow-lg">
+                    <%= hTitle1 %> <br class="hidden md:block"><span class="text-red-500 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700"><%= hTitle2 %></span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-300 max-w-2xl mb-10 drop-shadow">
+                    <%= hText %>
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="#ilanlar" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.5)] transition transform hover:-translate-y-1 border border-red-500 text-lg flex items-center justify-center">
+                        🚗 İlanları Keşfet
+                    </a>
+                    <a href="/add-listing" class="transition-link bg-slate-800/80 hover:bg-slate-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1 border border-slate-600 text-lg flex items-center justify-center backdrop-blur-sm">
+                        💰 Ücretsiz İlan Ver
+                    </a>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="ticker-wrap shadow-inner">
+            <div class="ticker">
+                <% 
+                const baseUrl = "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/thumb/";
+                const brands = [
+                    { name: 'MERCEDES', file: 'mercedes-benz.png' },
+                    { name: 'BMW', file: 'bmw.png' },
+                    { name: 'AUDI', file: 'audi.png' },
+                    { name: 'VOLKSWAGEN', file: 'volkswagen.png' },
+                    { name: 'FIAT', file: 'fiat.png' },
+                    { name: 'RENAULT', file: 'renault.png' },
+                    { name: 'FORD', file: 'ford.png' },
+                    { name: 'TOYOTA', file: 'toyota.png' },
+                    { name: 'HONDA', file: 'honda.png' },
+                    { name: 'PORSCHE', file: 'porsche.png' }
+                ]; 
+                %>
+                <% brands.forEach(brand => { %>
+                    <div class="ticker-item flex items-center">
+                        <img src="<%= baseUrl + brand.file %>" alt="<%= brand.name %> Logo" class="w-10 h-10 mr-3 rounded-full bg-white p-1 shadow-[0_0_15px_rgba(255,255,255,0.3)] object-contain transition-transform duration-300">
+                        <span><%= brand.name %></span>
+                    </div>
+                <% }); %>
+                <% brands.forEach(brand => { %>
+                    <div class="ticker-item flex items-center">
+                        <img src="<%= baseUrl + brand.file %>" alt="<%= brand.name %> Logo" class="w-10 h-10 mr-3 rounded-full bg-white p-1 shadow-[0_0_15px_rgba(255,255,255,0.3)] object-contain transition-transform duration-300">
+                        <span><%= brand.name %></span>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+        <div id="ilanlar" class="max-w-7xl mx-auto px-4 py-12">
+            
+            <% if (!filters.q && !filters.city && !filters.minPrice && !filters.sort && !filters.category && popularListings.length > 0) { %>
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-red-600 pl-3 drop-shadow-md">🔥 Popüler İlanlar</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <% popularListings.forEach(function(listing) { %>
+                        <div class="bg-slate-900 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-red-900 overflow-hidden hover:border-red-500 transition flex flex-col group relative transform hover:-translate-y-1">
+                            <div class="absolute top-2 left-2 bg-red-600/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-md z-10 shadow-lg border border-red-500">🔥 En Çok İncelenen</div>
+                            <div class="relative">
+                                <img src="<%= listing.images.split(',')[0] %>" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/600x400?text=OtoBorsasi'">
+                                <% if (user) { %>
+                                    <a href="/toggle-favorite/<%= listing.id %>" class="absolute top-2 right-2 bg-slate-950/60 backdrop-blur-md p-2 rounded-full hover:bg-slate-800 transition shadow-lg z-10 border border-slate-700">
+                                        <% if (userFavorites.includes(listing.id)) { %><span class="text-xl leading-none">❤️</span><% } else { %><span class="text-xl leading-none">🤍</span><% } %>
+                                    </a>
+                                <% } %>
+                                <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
+                            </div>
+                            <div class="p-5 flex-grow flex flex-col justify-between z-10 bg-slate-900">
+                                <div>
+                                    <h2 class="text-lg font-bold text-white group-hover:text-red-400 transition"><%= listing.brand %> <%= listing.model %></h2>
+                                    <p class="text-gray-400 text-sm mb-3 mt-1"><%= listing.year %> Model • <%= listing.mileage.toLocaleString('tr-TR') %> KM</p>
+                                </div>
+                                <div class="flex justify-between items-center mt-2 border-t border-slate-800 pt-4">
+                                    <span class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400"><%= listing.price.toLocaleString('tr-TR') %> ₺</span>
+                                    <a href="/listing/<%= listing.id %>" class="transition-link bg-red-600/90 hover:bg-red-500 text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition shadow">İncele</a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="lg:w-1/4">
+                    <form action="/" method="GET" class="bg-slate-900/80 backdrop-blur-md p-6 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-t-4 border-red-600 sticky top-36 border border-slate-800 transition-all">
+                        <h2 class="text-lg font-bold text-white mb-5 border-b border-slate-800 pb-2">Detaylı Arama</h2>
+                        <% if (filters.category) { %> <input type="hidden" name="category" value="<%= filters.category %>"> <% } %>
+
+                        <div class="mb-5">
+                            <label class="block text-sm font-bold text-red-400 mb-1.5">Sıralama</label>
+                            <select name="sort" class="w-full bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                                <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>En Yeni İlanlar</option>
+                                <option value="price_asc" <%= filters.sort === 'price_asc' ? 'selected' : '' %>>Fiyata Göre (Önce En Ucuz)</option>
+                                <option value="price_desc" <%= filters.sort === 'price_desc' ? 'selected' : '' %>>Fiyata Göre (Önce En Pahalı)</option>
+                                <option value="year_desc" <%= filters.sort === 'year_desc' ? 'selected' : '' %>>Yıla Göre (Önce En Yeni Model)</option>
+                            </select>
+                        </div>
+                        <div class="mb-5"><label class="block text-sm font-bold text-gray-300 mb-1.5">Marka / Model</label><input type="text" name="q" value="<%= filters.q || '' %>" placeholder="Örn: Renault" class="w-full bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition"></div>
+                        <div class="mb-5"><label class="block text-sm font-bold text-gray-300 mb-1.5">İl (Şehir)</label><input type="text" name="city" value="<%= filters.city || '' %>" placeholder="Örn: İzmir" class="w-full bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition"></div>
+                        <div class="mb-5">
+                            <label class="block text-sm font-bold text-gray-300 mb-1.5">Fiyat Aralığı (₺)</label>
+                            <div class="flex gap-2">
+                                <input type="number" name="minPrice" value="<%= filters.minPrice || '' %>" placeholder="Min" class="w-1/2 bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                                <input type="number" name="maxPrice" value="<%= filters.maxPrice || '' %>" placeholder="Max" class="w-1/2 bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-300 mb-1.5">Yıl Aralığı</label>
+                            <div class="flex gap-2">
+                                <input type="number" name="minYear" value="<%= filters.minYear || '' %>" placeholder="Min" class="w-1/2 bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                                <input type="number" name="maxYear" value="<%= filters.maxYear || '' %>" placeholder="Max" class="w-1/2 bg-slate-950/50 border border-slate-700 p-2.5 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-red-600/90 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-[0_0_10px_rgba(220,38,38,0.4)]">Arama Yap</button>
+                        <a href="/" class="transition-link block text-center text-sm text-gray-500 mt-4 hover:text-red-400 transition">Filtreleri Temizle</a>
+                    </form>
+                </div>
+
+                <div class="lg:w-3/4">
+                    <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-3">
+                        <h1 class="text-2xl font-bold text-white drop-shadow-md">
+                            <%= filters.category ? filters.category + ' İlanları' : (filters.q || filters.city || filters.minPrice || filters.sort ? 'Arama Sonuçları' : 'Vitrin İlanları') %> 
+                            <span class="text-gray-500 text-sm font-normal ml-2 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">(Toplam <%= totalItems %> ilan)</span>
+                        </h1>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <% if (listings && listings.length > 0) { %>
+                            <% listings.forEach(function(listing) { %>
+                                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden hover:border-red-600 transition flex flex-col group relative">
+                                    <div class="relative">
+                                        <img src="<%= listing.images.split(',')[0] %>" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/600x400?text=OtoBorsasi'">
+                                        <% if (user) { %>
+                                            <a href="/toggle-favorite/<%= listing.id %>" class="absolute top-2 right-2 bg-slate-950/60 backdrop-blur-md p-2 rounded-full hover:bg-slate-800 transition shadow-lg z-10 border border-slate-700">
+                                                <% if (userFavorites.includes(listing.id)) { %><span class="text-xl leading-none">❤️</span><% } else { %><span class="text-xl leading-none">🤍</span><% } %>
+                                            </a>
+                                        <% } %>
+                                        <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
+                                    </div>
+                                    <div class="p-5 flex-grow flex flex-col justify-between z-10 bg-slate-900">
+                                        <div>
+                                            <h2 class="text-lg font-bold text-white group-hover:text-red-400 transition"><%= listing.brand %> <%= listing.model %></h2>
+                                            <div class="flex justify-between items-center mt-2 mb-2">
+                                                <p class="text-gray-400 text-sm"><%= listing.year %> Model • <%= listing.mileage.toLocaleString('tr-TR') %> KM</p>
+                                                <span class="text-gray-500 text-xs font-semibold flex items-center bg-slate-950/50 px-2 py-1 rounded border border-slate-800"><span class="mr-1">👁️</span> <%= listing.views || 0 %></span>
+                                            </div>
+                                            <p class="text-red-400 text-xs font-medium mb-3">📍 <%= listing.city %> / <%= listing.district %></p>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-3 border-t border-slate-800 pt-4">
+                                            <span class="text-xl font-extrabold text-white"><%= listing.price.toLocaleString('tr-TR') %> ₺</span>
+                                            <a href="/listing/<%= listing.id %>" class="transition-link bg-slate-800/80 text-red-400 border border-slate-700 hover:bg-red-600 hover:text-white text-sm font-semibold py-1.5 px-4 rounded-lg transition shadow">İncele</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="col-span-full bg-slate-900/50 backdrop-blur-sm p-12 rounded-xl shadow-lg border-dashed border-2 border-slate-700 text-center">
+                                <p class="text-gray-400 text-lg">Bu sayfada veya seçtiğiniz kriterde ilan bulunamadı.</p>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <% if (totalPages > 1) { %>
+                        <%
+                            function buildUrl(pageNum) {
+                                let url = "/?page=" + pageNum;
+                                if (filters.category) url += "&category=" + encodeURIComponent(filters.category);
+                                if (filters.q) url += "&q=" + encodeURIComponent(filters.q);
+                                if (filters.city) url += "&city=" + encodeURIComponent(filters.city);
+                                if (filters.minPrice) url += "&minPrice=" + filters.minPrice;
+                                if (filters.maxPrice) url += "&maxPrice=" + filters.maxPrice;
+                                if (filters.minYear) url += "&minYear=" + filters.minYear;
+                                if (filters.maxYear) url += "&maxYear=" + filters.maxYear;
+                                if (filters.sort) url += "&sort=" + encodeURIComponent(filters.sort);
+                                return url;
+                            }
+                        %>
+                        <div class="flex justify-center items-center mt-12 space-x-2">
+                            <% if (currentPage > 1) { %> <a href="<%= buildUrl(currentPage - 1) %>" class="transition-link bg-slate-800/80 backdrop-blur-sm text-gray-300 hover:bg-red-600 hover:text-white px-4 py-2 rounded-lg transition font-bold border border-slate-700 shadow">&laquo; Önceki</a> <% } %>
+                            <% for(let i = 1; i <= totalPages; i++) { %> <a href="<%= buildUrl(i) %>" class="transition-link px-4 py-2 rounded-lg transition font-bold border border-slate-700 shadow <%= currentPage === i ? 'bg-red-600 text-white border-red-500' : 'bg-slate-800/80 backdrop-blur-sm text-gray-300 hover:bg-slate-700' %>"><%= i %></a> <% } %>
+                            <% if (currentPage < totalPages) { %> <a href="<%= buildUrl(currentPage + 1) %>" class="transition-link bg-slate-800/80 backdrop-blur-sm text-gray-300 hover:bg-red-600 hover:text-white px-4 py-2 rounded-lg transition font-bold border border-slate-700 shadow">Sonraki &raquo;</a> <% } %>
+                        </div>
+                    <% } %>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-950 border-t-4 border-red-600 pt-16 pb-8 mt-16 shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            
+            <div class="col-span-1 md:col-span-1">
+                <a href="/" class="text-3xl font-bold tracking-wider text-red-500 mb-6 inline-block drop-shadow-lg">OtoBorsası</a>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                    Türkiye'nin en güvenilir, en hızlı ve dinamik ikinci el araç platformu. Hayalinizdeki aracı bulmak veya aracınızı değerinde satmak artık sadece birkaç tık uzağınızda.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-10 h-10 bg-slate-800/80 rounded-full flex items-center justify-center text-gray-400 hover:bg-red-600 hover:text-white transition shadow border border-slate-700">IN</a>
+                    <a href="#" class="w-10 h-10 bg-slate-800/80 rounded-full flex items-center justify-center text-gray-400 hover:bg-red-600 hover:text-white transition shadow border border-slate-700">TW</a>
+                    <a href="#" class="w-10 h-10 bg-slate-800/80 rounded-full flex items-center justify-center text-gray-400 hover:bg-red-600 hover:text-white transition shadow border border-slate-700">FB</a>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-white font-bold text-lg mb-6 border-b border-slate-800 pb-2">Hızlı Linkler</h4>
+                <ul class="space-y-3">
+                    <li><a href="/" class="text-gray-400 hover:text-red-400 transition text-sm">Vitrin İlanları</a></li>
+                    <li><a href="/?category=Otomobil" class="text-gray-400 hover:text-red-400 transition text-sm">Otomobiller</a></li>
+                    <li><a href="/add-listing" class="text-gray-400 hover:text-red-400 transition text-sm">Ücretsiz İlan Ver</a></li>
+                    <li><a href="/register" class="text-gray-400 hover:text-red-400 transition text-sm">Hesap Oluştur</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-red-400 transition text-sm">Sıkça Sorulan Sorular</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-white font-bold text-lg mb-6 border-b border-slate-800 pb-2">İletişim</h4>
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <span class="text-red-500 mr-3 mt-1">📍</span>
+                        <span class="text-gray-400 text-sm">Teknoloji Geliştirme Bölgesi,<br>İzmir, Türkiye</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-red-500 mr-3">📞</span>
+                        <span class="text-gray-400 text-sm">+90 (850) 123 45 67</span>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-red-500 mr-3">📧</span>
+                        <span class="text-gray-400 text-sm">destek@otoborsasi.com</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-white font-bold text-lg mb-6 border-b border-slate-800 pb-2">E-Bülten</h4>
+                <p class="text-gray-400 text-sm mb-4">Piyasadaki en güncel fırsat araçlarından ve indirimlerden ilk siz haberdar olun.</p>
+                <form class="flex flex-col space-y-3">
+                    <input type="email" placeholder="E-posta adresiniz" class="bg-slate-950/50 border border-slate-700 text-white text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:border-red-500 transition">
+                    <button type="button" class="bg-red-600/90 hover:bg-red-500 text-white font-bold py-2.5 rounded-lg transition shadow-[0_0_10px_rgba(220,38,38,0.4)]">Abone Ol</button>
+                </form>
+            </div>
+            
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 border-t border-slate-800/80 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+            <p>&copy; 2026 OtoBorsası. Tüm hakları saklıdır. Bu bir bitirme projesidir.</p>
+            <div class="flex space-x-4 mt-4 md:mt-0">
+                <a href="#" class="hover:text-gray-300 transition">Gizlilik Politikası</a>
+                <a href="#" class="hover:text-gray-300 transition">Kullanım Şartları</a>
+                <a href="#" class="hover:text-gray-300 transition">Çerez Politikası</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.transition-link');
+            const mainContent = document.getElementById('main-content');
+
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Eğer link yeni sekmede açılacaksa veya boşsa engelleme
+                    if (this.target === '_blank' || !this.href || this.href.includes('#')) return;
+                    
+                    e.preventDefault(); // Anında geçişi durdur
+                    const targetUrl = this.href;
+
+                    // Çıkış animasyonu ayarları (Hafifçe kararır ve aşağı kayar)
+                    mainContent.style.transition = 'all 0.3s ease-in';
+                    mainContent.style.opacity = '0';
+                    mainContent.style.transform = 'translateY(10px)';
+
+                    // Animasyon bittiğinde (300ms sonra) yeni sayfaya yönlendir
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 300);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

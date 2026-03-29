@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>İlanı Düzenle - OtoBorsası</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .car-part { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.75rem; font-weight: bold; padding: 0.75rem 0.25rem; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .state-orijinal { background-color: #1e293b; color: #94a3b8; border: 2px solid #334155; }
+        .state-orijinal:hover { background-color: #334155; }
+        .state-boyali { background-color: #2563eb; color: #ffffff; border: 2px solid #1e3a8a; }
+        .state-degisen { background-color: #dc2626; color: #ffffff; border: 2px solid #7f1d1d; }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-200">
+    <nav class="bg-slate-900 text-white p-4 border-b border-slate-800"><div class="max-w-7xl mx-auto flex justify-between"><a href="/" class="text-2xl font-bold text-red-500">OtoBorsası</a><a href="/my-listings" class="hover:text-red-400 transition">İptal ve Geri Dön</a></div></nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-10">
+        <form action="/edit-listing/<%= listing.id %>" method="POST" enctype="multipart/form-data">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="lg:col-span-2 bg-slate-900 p-8 rounded-xl shadow-2xl border border-slate-800 border-t-4 border-t-blue-500">
+                    <h2 class="text-2xl font-bold mb-6 border-b border-slate-800 pb-4 text-white flex items-center">✏️ İlanı Düzenle</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div><label class="font-bold text-sm text-gray-300">Kategori</label><select name="category" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500">
+                            <option value="Otomobil" <%= listing.category === 'Otomobil' ? 'selected' : '' %>>Otomobil</option>
+                            <option value="Arazi, SUV & Pick-up" <%= listing.category === 'Arazi, SUV & Pick-up' ? 'selected' : '' %>>Arazi, SUV & Pick-up</option>
+                            <option value="Ticari Araçlar" <%= listing.category === 'Ticari Araçlar' ? 'selected' : '' %>>Ticari Araçlar</option>
+                            <option value="Motosiklet" <%= listing.category === 'Motosiklet' ? 'selected' : '' %>>Motosiklet</option>
+                        </select></div>
+                        <div><label class="font-bold text-sm text-gray-300">Marka</label><input type="text" name="brand" value="<%= listing.brand %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">Model</label><input type="text" name="model" value="<%= listing.model %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">Yıl</label><input type="number" name="year" value="<%= listing.year %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">Kilometre</label><input type="number" name="mileage" value="<%= listing.mileage %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">Motor Gücü (HP)</label><input type="number" name="engine_power" value="<%= listing.engine_power %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">Renk</label><input type="text" name="color" value="<%= listing.color %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">İl</label><input type="text" name="city" value="<%= listing.city %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">İlçe</label><input type="text" name="district" value="<%= listing.district %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">Fiyat (₺)</label><input type="number" name="price" value="<%= listing.price %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div><label class="font-bold text-sm text-gray-300">İletişim Numarası</label><input type="tel" name="phone" value="<%= listing.phone %>" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"></div>
+                        <div>
+                            <label class="font-bold text-sm text-gray-300">Yeni Fotoğraflar (İsteğe Bağlı)</label>
+                            <input type="file" name="images" accept="image/*" multiple class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-gray-400 file:bg-slate-700 file:border-0 file:text-white file:px-3 file:py-1 file:rounded cursor-pointer">
+                            <p class="text-xs text-blue-400 mt-1">Eğer fotoğraf seçmezseniz eski fotoğraflarınız korunur.</p>
+                        </div>
+                    </div>
+                    <div class="mb-6"><label class="font-bold text-sm text-gray-300">Açıklama</label><textarea name="description" rows="4" required class="w-full bg-slate-800 border border-slate-700 p-2 rounded text-white focus:ring-1 focus:ring-blue-500"><%= listing.description %></textarea></div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition text-lg shadow-lg">Değişiklikleri Kaydet</button>
+                </div>
+
+                <div class="bg-slate-900 p-8 rounded-xl shadow-2xl border border-slate-800">
+                    <h2 class="text-xl font-bold mb-2 border-b border-slate-800 pb-2 text-white">Boya / Değişen Durumu</h2>
+                    <p class="text-xs text-gray-400 mb-6">Parçanın üzerine tıklayarak durumunu belirtebilirsiniz.</p>
+                    
+                    <div class="flex justify-between items-center mb-6 text-xs font-bold bg-slate-950 p-2 rounded border border-slate-800">
+                        <div class="flex items-center"><div class="w-3 h-3 bg-slate-800 border border-slate-500 mr-1 rounded"></div> Orijinal</div>
+                        <div class="flex items-center"><div class="w-3 h-3 bg-blue-600 mr-1 rounded"></div> Boyalı</div>
+                        <div class="flex items-center"><div class="w-3 h-3 bg-red-600 mr-1 rounded"></div> Değişen</div>
+                    </div>
+
+                    <input type="hidden" name="damage_info" id="damage_info_input">
+                    <div class="grid grid-cols-3 gap-2 w-full max-w-xs mx-auto">
+                        <div id="on_tampon" class="car-part col-span-3 py-3">Ön Tampon</div>
+                        <div id="sol_on_camurluk" class="car-part">Sol Ön Çam.</div><div id="kaput" class="car-part py-6">Kaput</div><div id="sag_on_camurluk" class="car-part">Sağ Ön Çam.</div>
+                        <div id="sol_on_kapi" class="car-part">Sol Ön Kapı</div><div id="tavan" class="car-part row-span-2 flex flex-col justify-center py-12">Tavan</div><div id="sag_on_kapi" class="car-part">Sağ Ön Kapı</div>
+                        <div id="sol_arka_kapi" class="car-part">Sol Arka Kapı</div><div id="sag_arka_kapi" class="car-part">Sağ Arka Kapı</div>
+                        <div id="sol_arka_camurluk" class="car-part">Sol Arka Çam.</div><div id="bagaj" class="car-part py-6">Bagaj</div><div id="sag_arka_camurluk" class="car-part">Sağ Arka Çam.</div>
+                        <div id="arka_tampon" class="car-part col-span-3 py-3">Arka Tampon</div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const parts = document.querySelectorAll('.car-part');
+        const hiddenInput = document.getElementById('damage_info_input');
+        
+        // Veritabanındaki eski boya/değişen verilerini alıp maketi dolduruyoruz
+        let damageData = <%- listing.damage_info || '{}' %>;
+
+        function updateClass(part) {
+            if (damageData[part.id] === 'boyali') part.className = 'car-part state-boyali';
+            else if (damageData[part.id] === 'degisen') part.className = 'car-part state-degisen';
+            else { damageData[part.id] = 'orijinal'; part.className = 'car-part state-orijinal'; }
+        }
+
+        parts.forEach(part => {
+            // Açılışta eski renkleri ata
+            updateClass(part);
+
+            part.addEventListener('click', () => {
+                let currentState = damageData[part.id];
+                if(currentState === 'orijinal') damageData[part.id] = 'boyali';
+                else if(currentState === 'boyali') damageData[part.id] = 'degisen';
+                else damageData[part.id] = 'orijinal';
+
+                updateClass(part);
+                hiddenInput.value = JSON.stringify(damageData);
+            });
+        });
+        
+        hiddenInput.value = JSON.stringify(damageData);
+    </script>
+</body>
+</html>

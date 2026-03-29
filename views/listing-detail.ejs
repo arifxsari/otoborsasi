@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <title><%= listing.brand %> <%= listing.model %> - OtoBorsası</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> function changeMainImage(src) { document.getElementById('main-image').src = src; } </script>
+    <style>
+        /* Detay sayfasındaki parçaların tasarımı (Tıklanamaz, sadece gösterim) */
+        .car-part-view { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.75rem; font-weight: bold; padding: 0.75rem 0.25rem; border-radius: 0.375rem; user-select: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-gray-200">
+    <header class="sticky top-0 z-50 w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-800 shadow-xl">
+        <nav class="max-w-7xl mx-auto p-4 flex justify-between"><a href="/" class="text-2xl font-bold text-red-500 drop-shadow-lg">OtoBorsası</a><a href="/" class="hover:text-red-400 transition font-bold">Ana Sayfa</a></nav>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        
+        <div class="bg-slate-900 rounded-xl shadow-2xl flex flex-col lg:flex-row overflow-hidden border border-slate-800 mb-8">
+            <div class="lg:w-7/12 p-6 bg-slate-950 border-r border-slate-800">
+                <% let imagesArray = listing.images.split(','); %>
+                <div class="h-[400px] w-full bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center mb-4 shadow-inner border border-slate-800">
+                    <img id="main-image" src="<%= imagesArray[0] %>" class="max-h-full max-w-full object-contain">
+                </div>
+                <div class="flex space-x-3 overflow-x-auto pb-2">
+                    <% imagesArray.forEach(function(imgSrc) { %>
+                        <img src="<%= imgSrc %>" onclick="changeMainImage('<%= imgSrc %>')" class="w-24 h-16 object-cover rounded-lg cursor-pointer border-2 border-slate-800 hover:border-red-500 opacity-70 hover:opacity-100 transition shadow">
+                    <% }); %>
+                </div>
+            </div>
+
+            <div class="lg:w-5/12 p-6">
+                <h1 class="text-3xl font-bold text-white"><%= listing.brand %> <%= listing.model %></h1>
+                <div class="flex items-center space-x-4 mt-2 mb-4">
+                    <span class="bg-slate-800 text-gray-300 text-sm font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center"><span class="mr-2 text-lg">👁️</span> <b><%= listing.views || 0 %></b> Kez İncelendi</span>
+                </div>
+                <p class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700 mb-6"><%= listing.price.toLocaleString('tr-TR') %> ₺</p>
+
+                <% if (user) { %>
+                    <a href="/toggle-favorite/<%= listing.id %>" class="inline-flex items-center bg-slate-800 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-lg transition mb-6 shadow">
+                        <% if (isFavorite) { %><span class="mr-2 text-lg leading-none">❤️</span> <span class="text-white font-semibold">Favorilerden Çıkar</span><% } else { %><span class="mr-2 text-lg leading-none">🤍</span> <span class="text-white font-semibold">Favorilere Ekle</span><% } %>
+                    </a>
+                <% } %>
+<% if (user && user.id === listing.user_id) { %>
+    <a href="/edit-listing/<%= listing.id %>" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition mb-6 ml-2 shadow">
+        <span class="mr-2 text-lg leading-none">✏️</span> <span class="text-white font-semibold">İlanımı Düzenle</span>
+    </a>
+<% } %>
+                <div class="bg-slate-950 border border-slate-800 rounded-lg shadow-inner mb-6 text-sm">
+                    <div class="flex border-b border-slate-800 p-3"><span class="w-1/3 text-gray-500 font-semibold">İlan No</span><span class="w-2/3 text-gray-200 font-bold"><%= listing.id + 100000 %></span></div>
+                    <div class="flex border-b border-slate-800 p-3 bg-slate-900/50"><span class="w-1/3 text-gray-500 font-semibold">Kategori</span><span class="w-2/3 text-gray-200"><%= listing.category %></span></div>
+                    <div class="flex border-b border-slate-800 p-3"><span class="w-1/3 text-gray-500 font-semibold">Konum</span><span class="w-2/3 text-red-400 font-bold">📍 <%= listing.city %>, <%= listing.district %></span></div>
+                    <div class="flex border-b border-slate-800 p-3 bg-slate-900/50"><span class="w-1/3 text-gray-500 font-semibold">Yıl</span><span class="w-2/3 text-gray-200"><%= listing.year %></span></div>
+                    <div class="flex border-b border-slate-800 p-3"><span class="w-1/3 text-gray-500 font-semibold">Kilometre</span><span class="w-2/3 text-gray-200"><%= listing.mileage.toLocaleString('tr-TR') %> km</span></div>
+                    <div class="flex border-b border-slate-800 p-3 bg-slate-900/50"><span class="w-1/3 text-gray-500 font-semibold">Renk</span><span class="w-2/3 text-gray-200"><%= listing.color %></span></div>
+                    <div class="flex p-3"><span class="w-1/3 text-gray-500 font-semibold">Motor Gücü</span><span class="w-2/3 text-gray-200"><%= listing.engine_power %> hp</span></div>
+                </div>
+
+                <div class="bg-slate-800 p-4 border border-red-900 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-red-400 mb-3 border-b border-red-900/50 pb-2">Satıcı İletişim</h3>
+                    <p class="text-gray-200 mb-1 flex items-center"><span class="mr-2 text-lg">👤</span> <%= listing.seller_name %></p>
+                    <p class="text-gray-200 mb-1 flex items-center"><span class="mr-2 text-lg">📧</span> <%= listing.seller_email %></p>
+                    <% if (listing.phone) { %> <p class="text-green-400 font-bold flex items-center mt-3 bg-slate-900 p-2.5 rounded border border-slate-700"><span class="mr-2 text-lg">📞</span> <%= listing.phone %></p> <% } else { %> <p class="text-gray-500 text-sm mt-2 italic">Telefon numarası belirtilmemiş.</p> <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 bg-slate-900 p-8 rounded-xl shadow-2xl border border-slate-800">
+                <h2 class="text-2xl font-bold text-white border-b border-slate-800 pb-3 mb-6 flex items-center"><span class="mr-2">📝</span> İlan Açıklaması</h2>
+                <p class="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg"><%= listing.description %></p>
+            </div>
+
+            <div class="bg-slate-900 p-8 rounded-xl shadow-2xl border border-slate-800">
+                <h2 class="text-xl font-bold text-white border-b border-slate-800 pb-3 mb-6 flex items-center"><span class="mr-2">🛡️</span> Boya / Değişen Durumu</h2>
+                
+                <div class="flex justify-between items-center mb-6 text-xs font-bold bg-slate-950 p-3 rounded-lg border border-slate-800 shadow-inner">
+                    <div class="flex items-center"><div class="w-3 h-3 bg-slate-800 border border-slate-500 mr-1.5 rounded-sm"></div> Orijinal</div>
+                    <div class="flex items-center"><div class="w-3 h-3 bg-blue-600 mr-1.5 rounded-sm"></div> Boyalı</div>
+                    <div class="flex items-center"><div class="w-3 h-3 bg-red-600 mr-1.5 rounded-sm"></div> Değişen</div>
+                </div>
+
+                <% 
+                    // Veritabanından gelen JSON'u okuma (Yoksa boş obje)
+                    let damage = {};
+                    try { damage = listing.damage_info ? JSON.parse(listing.damage_info) : {}; } catch(e) {}
+                    
+                    // Renge karar veren fonksiyon
+                    function getClass(part) {
+                        if (damage[part] === 'boyali') return 'bg-blue-600 text-white border-2 border-blue-800 shadow-[0_0_10px_rgba(37,99,235,0.4)]';
+                        if (damage[part] === 'degisen') return 'bg-red-600 text-white border-2 border-red-800 shadow-[0_0_10px_rgba(220,38,38,0.4)]';
+                        return 'bg-slate-800 text-gray-400 border-2 border-slate-700'; // orijinal
+                    }
+                %>
+
+                <div class="grid grid-cols-3 gap-2 w-full max-w-xs mx-auto">
+                    <div class="car-part-view col-span-3 py-3 <%= getClass('on_tampon') %>">Ön Tampon</div>
+                    
+                    <div class="car-part-view <%= getClass('sol_on_camurluk') %>">Sol Ön Çam.</div>
+                    <div class="car-part-view py-6 <%= getClass('kaput') %>">Kaput</div>
+                    <div class="car-part-view <%= getClass('sag_on_camurluk') %>">Sağ Ön Çam.</div>
+                    
+                    <div class="car-part-view <%= getClass('sol_on_kapi') %>">Sol Ön Kapı</div>
+                    <div class="car-part-view row-span-2 flex flex-col justify-center py-12 <%= getClass('tavan') %>">Tavan</div>
+                    <div class="car-part-view <%= getClass('sag_on_kapi') %>">Sağ Ön Kapı</div>
+                    
+                    <div class="car-part-view <%= getClass('sol_arka_kapi') %>">Sol Arka Kapı</div>
+                    <div class="car-part-view <%= getClass('sag_arka_kapi') %>">Sağ Arka Kapı</div>
+                    
+                    <div class="car-part-view <%= getClass('sol_arka_camurluk') %>">Sol Arka Çam.</div>
+                    <div class="car-part-view py-6 <%= getClass('bagaj') %>">Bagaj</div>
+                    <div class="car-part-view <%= getClass('sag_arka_camurluk') %>">Sağ Arka Çam.</div>
+                    
+                    <div class="car-part-view col-span-3 py-3 <%= getClass('arka_tampon') %>">Arka Tampon</div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
