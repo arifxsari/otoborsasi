@@ -219,4 +219,7 @@ app.post('/edit-listing/:id', upload.array('images', 15), (req, res) => {
     db.run(updateQuery, params, () => res.redirect('/my-listings'));
 });
 // =======================================================
-app.listen(PORT, () => console.log(`Sunucu çalışıyor: http://localhost:${PORT}`));
+const port_numarasi = process.env.PORT || 3000;
+app.listen(port_numarasi, () => {
+    console.log(`Sistem ${port_numarasi} portunda başarıyla ayağa kalktı!`);
+});
